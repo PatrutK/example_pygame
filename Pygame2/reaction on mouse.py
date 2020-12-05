@@ -16,20 +16,19 @@ class Board:
         self.cell_size = cell_size
 
     def render(self, screen):
+        color = pygame.Color('black')
         for j in range(self.height):
             for i in range(self.width):
                 if self.board[j][i] == 0:
-                    pygame.draw.rect(screen, (0, 0, 0), (
-                        self.left + i * self.cell_size, self.top + j * self.cell_size, self.cell_size,
-                        self.cell_size), 0)
+                    color = pygame.Color('black')
                 elif self.board[j][i] == 1:
-                    pygame.draw.rect(screen, (255, 0, 0), (
-                        self.left + i * self.cell_size, self.top + j * self.cell_size, self.cell_size,
-                        self.cell_size), 0)
+                    color = pygame.Color('red')
                 else:
-                    pygame.draw.rect(screen, (0, 0, 255), (
-                        self.left + i * self.cell_size, self.top + j * self.cell_size, self.cell_size,
-                        self.cell_size), 0)
+                    color = pygame.Color('blue')
+
+                pygame.draw.rect(screen, color, (
+                    self.left + i * self.cell_size, self.top + j * self.cell_size, self.cell_size,
+                    self.cell_size), 0)
                 pygame.draw.rect(screen, (255, 255, 255), (
                     self.left + i * self.cell_size, self.top + j * self.cell_size, self.cell_size,
                     self.cell_size), 1)
