@@ -24,10 +24,10 @@ class Board:
 
 if __name__ == '__main__':
     pygame.init()
-    size = 600, 600
+    size = 1900, 1000
     screen = pygame.display.set_mode(size)
-    board = Board(7, 5)
-    board.set_view(100, 100, 60)
+    board = Board(49, 94)
+    board.set_view(10, 10, 20)
     pygame.display.set_caption('Клетчатое поле')
     running = True
     while running:
