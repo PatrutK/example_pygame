@@ -15,7 +15,7 @@ if __name__ == '__main__':
     running = True
 
     while running:
-        clock.tick(100)
+        clock.tick(30)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
