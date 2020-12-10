@@ -51,10 +51,10 @@ class Board:
 
 
 pygame.init()
-size = 600, 600
+size = 570, 570
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Чёрное в белое и наоборот')
-board = Board(5, 7)
+board = Board(11, 11)
 running = True
 while running:
     for event in pygame.event.get():
