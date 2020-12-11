@@ -1,6 +1,7 @@
 import pygame
 from random import randint
 
+
 class Board:
     def __init__(self, width, height):
         self.width = width
@@ -42,7 +43,7 @@ class Board:
 
 
 class Minesweeper(Board):
-    def __init__(self, width, height, mines = 10):
+    def __init__(self, width, height, mines=10):
         super().__init__(width, height)
         self.left = 10
         self.top = 10
@@ -58,10 +59,8 @@ class Minesweeper(Board):
             if count == self.mines:
                 break
 
-
     def on_click(self, cell):
         self.open_cell(cell)
-
 
     def open_cell(self, cell):
         x, y = cell
@@ -94,7 +93,6 @@ class Minesweeper(Board):
                 pygame.draw.rect(screen, pygame.Color('white'), (
                     self.left + x * self.cell_size, self.top + self.cell_size * y, self.cell_size,
                     self.cell_size), 1)
-
 
 
 if __name__ == '__main__':
