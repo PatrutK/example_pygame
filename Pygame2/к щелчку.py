@@ -21,7 +21,7 @@ while running:
             move = True
             x_pos, y_pos = event.pos[0], event.pos[1]
     screen.fill((0, 0, 0))
-    pygame.draw.circle(screen, pygame.color.Color('red'), (x, y), 60)
+    pygame.draw.circle(screen, pygame.color.Color('red'), (x, y), 20)
 
     if x_pos > x:
         x += 1

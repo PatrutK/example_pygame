@@ -102,12 +102,20 @@ class Player(pygame.sprite.Sprite):
             tile_width * x + 15, tile_height * y + 5)
 
 
-
 def move(player, dir):
     x, y = player.pos
     if dir == 'up':
-        if y > 0 and level_map[y - 1] [x] == '.':
+        if y > 0 and (level_map[y - 1][x] == '.' or level_map[y - 1][x] == '@'):
             player.move(x, y - 1)
+    elif dir == 'down':
+        if y > 0 and (level_map[y + 1][x] == '.' or level_map[y + 1][x] == '@'):
+            player.move(x, y + 1)
+    elif dir == 'right':
+        if x > 0 and (level_map[y][x + 1] == '.' or level_map[y][x + 1] == '@'):
+            player.move(x + 1, y)
+    elif dir == 'left':
+        if x > 0 and (level_map[y][x - 1] == '.' or level_map[y][x - 1] == '@'):
+            player.move(x - 1, y)
 
 
 def generate_level(level):
@@ -121,12 +129,11 @@ def generate_level(level):
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
-    # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
 
 pygame.init()
-start_screen()
+# start_screen()
 level_map = load_level('map.txt')
 player, level_x, level_y = generate_level(load_level('map.txt'))
 running = True
@@ -137,33 +144,38 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 move(player, 'up')
+            elif event.key == pygame.K_DOWN:
+                move(player, 'down')
+            elif event.key == pygame.K_RIGHT:
+                move(player, 'right')
+            elif event.key == pygame.K_LEFT:
+                move(player, 'left')
     screen.fill(pygame.Color('black'))
     all_sprites.draw(screen)
     pygame.display.flip()
     clock.tick(FPS)
 
 
-class Camera:
-    # зададим начальный сдвиг камеры
-    def __init__(self):
-        self.dx = 0
-        self.dy = 0
-
-    # сдвинуть объект obj на смещение камеры
-    def apply(self, obj):
-        obj.rect.x += self.dx
-        obj.rect.y += self.dy
-
-    # позиционировать камеру на объекте target
-    def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - 600 // 2)
-        self.dy = -(target.rect.y + target.rect.h // 2 - 600 // 2)
-
-
-camera = Camera()
+# class Camera:
+#     # зададим начальный сдвиг камеры
+#     def __init__(self):
+#         self.dx = 0
+#         self.dy = 0
+#
+#     # сдвинуть объект obj на смещение камеры
+#     def apply(self, obj):
+#         obj.rect.x += self.dx
+#         obj.rect.y += self.dy
+#
+#     # позиционировать камеру на объекте target
+#     def update(self, target):
+#         self.dx = -(target.rect.x + target.rect.w // 2 - 600 // 2)
+#         self.dy = -(target.rect.y + target.rect.h // 2 - 600 // 2)
 
 
-camera.update(player)
-# обновляем положение всех спрайтов
-for sprite in all_sprites:
-    camera.apply(sprite)
+# camera = Camera()
+#
+# camera.update(player)
+# # обновляем положение всех спрайтов
+# for sprite in all_sprites:
+#     camera.apply(sprite)
