@@ -1,37 +1,22 @@
 import pygame
-import os
 import sys
+import os
 
-screen_size = (600, 600)
-screen = pygame.display.set_mode(screen_size)
-pygame.display.set_caption('Mario')
-tile_width = tile_height = 50
-
-FPS = 50
+size = width, height = (900, 900)
+screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
-player = None  # основной персонаж
-all_sprites = pygame.sprite.Group()  # группы спрайтов
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
+fps = 60
+pygame.init()
 
 
-def load_image(name, color_key=None):  # нужна для подгрузки картинки в игру
+def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
-    try:  # Выявляем ошибку
-        image = pygame.image.load(fullname)
-    except pygame.error as message:
-        print('Картинку не удаётся загрузить', fullname)
-        raise SystemExit(message)
-    if color_key is not None:  # Прозрачность картинки, если Нан, то она уже прозрачна
-        if color_key == -1:  # Если передано -1, то по верхнему левому углу удаляем фон
-            color_key = image.get_at((0, 0))
-        image.set_colorkey(color_key)  # Ставим фоном передаваемое значение
+    # если файл не существует, то выходим
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
     return image
-
-
-def terminate():
-    pygame.quit()
-    sys.exit()
 
 
 def start_screen():
@@ -40,7 +25,7 @@ def start_screen():
                   "Если в правилах несколько строк,",
                   "приходится выводить их построчно"]
 
-    fon = pygame.transform.scale(load_image('fon.jpg'), screen_size)
+    fon = pygame.transform.scale(load_image('fon.jpg'), (width, height))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 50
@@ -59,20 +44,41 @@ def start_screen():
                 terminate()
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
-                return
-        clock.tick(FPS)
+                return  # начинаем игру
         pygame.display.flip()
+        clock.tick(fps)
 
 
-def load_level(filename):
-    filename = "data/" + filename
-    # читаем уровень, убирая символы перевода строки
-    with open(filename, 'r') as mapFile:
-        level_map = [line.strip() for line in mapFile]
-    max_width = max(map(len, level_map))  # и подсчитываем максимальную длину
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map))  # дополняем каждую строку пустыми клетками ('.')
+def terminate():
+    pygame.quit()
+    sys.exit()
 
 
+def load_level(name):
+    fullname = "data/" + name
+    with open(fullname, 'r') as map_file:
+        level_map = []
+        for line in map_file:
+            line = line.strip()
+            level_map.append(line)
+    return level_map
+
+
+def draw_level(level_map):
+    new_player, x, y = None, None, None
+    for y in range(len(level_map)):
+        for x in range(len(level_map[y])):
+            if level_map[y][x] == '.':
+                Tile('grass.png', x, y)
+            elif level_map[y][x] == '#':
+                Tile('box.png', x, y)
+            elif level_map[y][x] == '@':
+                Tile('grass.png', x, y)
+                new_player = Player(x, y)
+    return new_player, x, y
+
+
+tile_width = tile_height = 50
 tile_images = {
     'wall': load_image('box.png'),
     'empty': load_image('grass.png')
@@ -83,99 +89,104 @@ player_image = load_image('mario.png')
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
-        self.image = tile_images[tile_type]
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x, tile_height * pos_y)
+        self.image = load_image(tile_type)
+        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+
+        if tile_type == 'box.png':
+            self.add(box_group, tiles_group, all_sprites)
+        else:
+            self.add(tiles_group, all_sprites)
 
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
-        super().__init__(player_group, all_sprites)
-        self.image = player_image
-        self.pos = (pos_x, pos_y)
-        self.rect = self.image.get_rect().move(
-            tile_width * pos_x + 15, tile_height * pos_y + 5)
+        super().__init__()
+        self.image = load_image('mario.png')
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(50 * pos_x, 50 * pos_y)
 
-    def move(self, x, y):
-        self.pos = (x, y)
-        self.rect = self.image.get_rect().move(
-            tile_width * x + 15, tile_height * y + 5)
+        self.add(player_group, all_sprites)
 
+    def move_up(self):
+        self.rect = self.rect.move(0, -50)
 
-def move(player, dir):
-    x, y = player.pos
-    if dir == 'up':
-        if y > 0 and (level_map[y - 1][x] == '.' or level_map[y - 1][x] == '@'):
-            player.move(x, y - 1)
-    elif dir == 'down':
-        if y > 0 and (level_map[y + 1][x] == '.' or level_map[y + 1][x] == '@'):
-            player.move(x, y + 1)
-    elif dir == 'right':
-        if x > 0 and (level_map[y][x + 1] == '.' or level_map[y][x + 1] == '@'):
-            player.move(x + 1, y)
-    elif dir == 'left':
-        if x > 0 and (level_map[y][x - 1] == '.' or level_map[y][x - 1] == '@'):
-            player.move(x - 1, y)
+    def move_down(self):
+        self.rect = self.rect.move(0, +50)
+
+    def move_left(self):
+        self.rect = self.rect.move(-50, 0)
+
+    def move_right(self):
+        self.rect = self.rect.move(+50, 0)
 
 
-def generate_level(level):
-    new_player, x, y = None, None, None
-    for y in range(len(level)):
-        for x in range(len(level[y])):
-            if level[y][x] == '.':
-                Tile('empty', x, y)
-            elif level[y][x] == '#':
-                Tile('wall', x, y)
-            elif level[y][x] == '@':
-                Tile('empty', x, y)
-                new_player = Player(x, y)
-    return new_player, x, y
+class Camera:
+    def __init__(self, field_size):
+        self.dx = 0
+        self.dy = 0
+        self.field_size = field_size
+
+    def apply(self, obj):
+        obj.rect.x += self.dx
+
+        if obj.rect.x < -obj.rect.width:
+            obj.rect.x += (self.field_size[0] + 1) * obj.rect.width
+
+        if obj.rect.x >= (self.field_size[0]) * obj.rect.width:
+            obj.rect.x += -obj.rect.width * (1 + self.field_size[0])
+        obj.rect.y += self.dy
+
+        if obj.rect.y < -obj.rect.height:
+            obj.rect.y += (self.field_size[1] + 1) * obj.rect.height
+        if obj.rect.y >= (self.field_size[1]) * obj.rect.height:
+            obj.rect.y += -obj.rect.height * (1 + self.field_size[1])
+
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
-pygame.init()
-# start_screen()
-level_map = load_level('map.txt')
-player, level_x, level_y = generate_level(load_level('map.txt'))
+all_sprites = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+box_group = pygame.sprite.Group()
+
+player, level_x, level_y = draw_level(load_level("map.txt"))
+camera = Camera((level_x, level_y))
+start_screen()
+
 running = True
 while running:
     for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+            player.move_up()
+            if pygame.sprite.spritecollideany(player, box_group):
+                player.move_down()
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+            player.move_down()
+            if pygame.sprite.spritecollideany(player, box_group):
+                player.move_up()
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
+            player.move_left()
+            if pygame.sprite.spritecollideany(player, box_group):
+                player.move_right()
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
+            player.move_right()
+            if pygame.sprite.spritecollideany(player, box_group):
+                player.move_left()
+
         if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                move(player, 'up')
-            elif event.key == pygame.K_DOWN:
-                move(player, 'down')
-            elif event.key == pygame.K_RIGHT:
-                move(player, 'right')
-            elif event.key == pygame.K_LEFT:
-                move(player, 'left')
-    screen.fill(pygame.Color('black'))
-    all_sprites.draw(screen)
+            terminate()
+
+    camera.update(player)
+    for sprite in all_sprites:
+        camera.apply(sprite)
+
+    screen.fill(pygame.Color(0, 0, 0))
+    tiles_group.draw(screen)
+    player_group.draw(screen)
+
     pygame.display.flip()
-    clock.tick(FPS)
+    clock.tick(fps)
 
-
-# class Camera:
-#     # зададим начальный сдвиг камеры
-#     def __init__(self):
-#         self.dx = 0
-#         self.dy = 0
-#
-#     # сдвинуть объект obj на смещение камеры
-#     def apply(self, obj):
-#         obj.rect.x += self.dx
-#         obj.rect.y += self.dy
-#
-#     # позиционировать камеру на объекте target
-#     def update(self, target):
-#         self.dx = -(target.rect.x + target.rect.w // 2 - 600 // 2)
-#         self.dy = -(target.rect.y + target.rect.h // 2 - 600 // 2)
-
-
-# camera = Camera()
-#
-# camera.update(player)
-# # обновляем положение всех спрайтов
-# for sprite in all_sprites:
-#     camera.apply(sprite)
+terminate()
